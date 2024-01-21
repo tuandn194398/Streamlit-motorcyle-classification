@@ -21,17 +21,21 @@ SOURCES_LIST = ["Image", "Video", "Camera"]
 
 # DL model config
 DETECTION_MODEL_DIR = ROOT / 'weights' / 'detection'
+CLASSIFY_MODEL_DIR = ROOT / 'weights' / 'classify'
 YOLOv8n = DETECTION_MODEL_DIR / "yolov8n.pt"
 YOLOv8s = DETECTION_MODEL_DIR / "yolov8s.pt"
 YOLOv8m = DETECTION_MODEL_DIR / "yolov8m.pt"
 YOLOv8l = DETECTION_MODEL_DIR / "yolov8l.pt"
 YOLOv8x = DETECTION_MODEL_DIR / "yolov8x.pt"
-YOLOv8lcls = DETECTION_MODEL_DIR/ "yolov8l-cls.pt"
+YOLOv8lcls = DETECTION_MODEL_DIR/ "best.pt"
 
 DETECTION_MODEL_LIST = [
     "yolov8n.pt",
     "yolov8s.pt",
     "yolov8m.pt",
     "yolov8l.pt",
-    "yolov8x.pt",
-    "yolov8l-cls.pt"]
+    "yolov8x.pt"]
+
+CLASSIFY_MODEL_LIST = [
+    "best.pt"
+]

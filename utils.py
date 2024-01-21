@@ -3,6 +3,15 @@ import streamlit as st
 import cv2
 from PIL import Image
 import tempfile
+import os
+import shutil
+from  func.delete_file import remove_folder_contents
+# Global variable to control the video playback
+video_playing = True
+
+def stop_video():
+    global video_playing
+    video_playing = False
 
 
 def _display_detected_frames(conf, model, st_frame, image):
@@ -15,10 +24,10 @@ def _display_detected_frames(conf, model, st_frame, image):
     :return: None
     """
     # Resize the image to a standard size
-    image = cv2.resize(image, (720, int(720 * (9 / 16))))
+    image = cv2.resize(image,  (720, int(720 * (9 / 16))))
 
     # Predict the objects in the image using YOLOv8 model
-    res = model.predict(image, conf=conf, classes=3)
+    res = model.predict(image, conf=conf, classes=3, save_crop = True, save_txt = True)
 
     # Plot the detected objects on the video frame
     res_plotted = res[0].plot()
@@ -69,7 +78,8 @@ def infer_uploaded_image(conf, model):
             )
 
     if source_img:
-        if st.button("Execution"):
+        if st.button("Detect"):
+            remove_folder_contents('runs/detect')
             with st.spinner("Running..."):
                 res = model.predict(uploaded_image,
                                     conf=conf, classes=3)
@@ -96,35 +106,39 @@ def infer_uploaded_video(conf, model):
     :param model: An instance of the `YOLOv8` class containing the YOLOv8 model.
     :return: None
     """
+    global video_playing
     source_video = st.sidebar.file_uploader(
         label="Choose a video..."
     )
 
     if source_video:
         st.video(source_video)
-
-    if source_video:
-        if st.button("Execution"):
-            with st.spinner("Running..."):
-                try:
-                    tfile = tempfile.NamedTemporaryFile()
-                    tfile.write(source_video.read())
-                    vid_cap = cv2.VideoCapture(
-                        tfile.name)
-                    st_frame = st.empty()
-                    while (vid_cap.isOpened()):
-                        success, image = vid_cap.read()
-                        if success:
-                            _display_detected_frames(conf,
-                                                     model,
-                                                     st_frame,
-                                                     image
-                                                     )
-                        else:
-                            vid_cap.release()
-                            break
-                except Exception as e:
-                    st.error(f"Error loading video: {e}")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("Detect motorbike"):
+                if remove_folder_contents('runs/detect'):
+                    video_playing = True
+                    with st.spinner("Running..."):
+                        try:
+                            tfile = tempfile.NamedTemporaryFile(delete=False)
+                            tfile.write(source_video.read())
+                            vid_cap = cv2.VideoCapture(tfile.name)
+                            st_frame = st.empty()
+                            while video_playing and vid_cap.isOpened():
+                                success, image = vid_cap.read()
+                                if success:
+                                    _display_detected_frames(conf, model, st_frame, image)
+                                else:
+                                    vid_cap.release()
+                                    break
+                        except Exception as e:
+                            st.error(f"Error loading video: {e}")
+        with col2:
+            if st.button("Stop Video"):
+                stop_video()
+        with col3:
+            if st.button("Analyze"):
+                st.session_state['analyze_pressed'] = True
 
 
 def infer_uploaded_webcam(conf, model, webcam_url):
@@ -134,21 +148,22 @@ def infer_uploaded_webcam(conf, model, webcam_url):
     :param model: An instance of the `YOLOv8` class containing the YOLOv8 model.
     :return: None
     """
+    global video_playing
     try:
-        flag = st.button(
-            label="Stop running"
-        )
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Start Webcam"):
+                video_playing = True
+                remove_folder_contents('runs/detect')
+        with col2:
+            if st.button("Stop Webcam"):
+                stop_video()
         vid_cap = cv2.VideoCapture(webcam_url)  # local camera
         st_frame = st.empty()
-        while not flag:
+        while video_playing:
             success, image = vid_cap.read()
             if success:
-                _display_detected_frames(
-                    conf,
-                    model,
-                    st_frame,
-                    image
-                )
+                _display_detected_frames(conf, model, st_frame, image)
             else:
                 vid_cap.release()
                 break
