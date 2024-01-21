@@ -6,6 +6,7 @@ import tempfile
 import os
 import shutil
 from  func.delete_file import remove_folder_contents
+from func.mode_infer import _display_detected_frames
 # Global variable to control the video playback
 video_playing = True
 
@@ -13,33 +14,8 @@ def stop_video():
     global video_playing
     video_playing = False
 
-
-def _display_detected_frames(conf, model, st_frame, image):
-    """
-    Display the detected objects on a video frame using the YOLOv8 model.
-    :param conf (float): Confidence threshold for object detection.
-    :param model (YOLOv8): An instance of the `YOLOv8` class containing the YOLOv8 model.
-    :param st_frame (Streamlit object): A Streamlit object to display the detected video.
-    :param image (numpy array): A numpy array representing the video frame.
-    :return: None
-    """
-    # Resize the image to a standard size
-    image = cv2.resize(image,  (720, int(720 * (9 / 16))))
-
-    # Predict the objects in the image using YOLOv8 model
-    res = model.predict(image, conf=conf, classes=3, save_crop = True, save_txt = True)
-
-    # Plot the detected objects on the video frame
-    res_plotted = res[0].plot()
-    st_frame.image(res_plotted,
-                   caption='Detected Video',
-                   channels="BGR",
-                   use_column_width=True
-                   )
-
-
 @st.cache_resource
-def load_model(model_path):
+def load_Yolo_model(model_path):
     """
     Loads a YOLO object detection model from the specified model_path.
 
@@ -52,6 +28,8 @@ def load_model(model_path):
     model = YOLO(model_path)
     return model
 
+def load_model(model_path):
+    return 1
 
 def infer_uploaded_image(conf, model):
     """
@@ -107,12 +85,13 @@ def infer_uploaded_video(conf, model):
     :return: None
     """
     global video_playing
+    video_placeholder = st.empty()
     source_video = st.sidebar.file_uploader(
         label="Choose a video..."
     )
 
     if source_video:
-        st.video(source_video)
+        video_placeholder.video(source_video)
         col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("Detect motorbike"):
@@ -123,11 +102,11 @@ def infer_uploaded_video(conf, model):
                             tfile = tempfile.NamedTemporaryFile(delete=False)
                             tfile.write(source_video.read())
                             vid_cap = cv2.VideoCapture(tfile.name)
-                            st_frame = st.empty()
+                            # st_frame = st.empty()
                             while video_playing and vid_cap.isOpened():
                                 success, image = vid_cap.read()
                                 if success:
-                                    _display_detected_frames(conf, model, st_frame, image)
+                                    _display_detected_frames(conf, model, video_placeholder, image)
                                 else:
                                     vid_cap.release()
                                     break

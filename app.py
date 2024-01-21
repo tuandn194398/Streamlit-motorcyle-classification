@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image
 import streamlit as st
 import config
-from utils import load_model, infer_uploaded_image, infer_uploaded_video, infer_uploaded_webcam
+from utils import load_Yolo_model, infer_uploaded_image, infer_uploaded_video, infer_uploaded_webcam
 from func.copy_file import copy_folder
 # setting page layout
 st.set_page_config(
@@ -52,7 +52,7 @@ else:
 
 # load pretrained DL model
 try:
-    model = load_model(model_path)
+    model = load_Yolo_model(model_path)
 except Exception as e:
     st.error(f"Unable to load model. Please check the specified path: {model_path}")
 
@@ -94,5 +94,10 @@ if 'analyze_pressed' in st.session_state and st.session_state['analyze_pressed']
         "Select Classification Model",
         config.CLASSIFY_MODEL_LIST
     )
+    if model_type:
+        model_path = Path(config.CLASSIFY_MODEL_DIR, str(classify_model))
+    else:
+        "select model"
+    print(model_path)
     # Reset the session state so the select box won't keep appearing
     st.session_state['analyze_pressed'] = False
