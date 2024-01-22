@@ -2,6 +2,7 @@ from ultralytics import YOLO
 import streamlit as st
 import cv2
 import fnmatch
+import time
 import os
 def _display_detected_frames(conf, model, st_frame, image):
     """
@@ -43,3 +44,4 @@ def _display_classify_frame(model, st_frame, folder):
                         # Check if the image was read successfully
             if file is not None:
                 results = model.predict(path, save_txt = True)
+                time.sleep(0.5)

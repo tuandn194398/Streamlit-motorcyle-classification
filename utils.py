@@ -2,7 +2,6 @@ from ultralytics import YOLO
 import streamlit as st
 import cv2
 import fnmatch
-import os as path
 import os
 from PIL import Image
 import tempfile
@@ -80,7 +79,7 @@ def infer_uploaded_image(conf, model):
                         st.write(ex)
 
 
-def infer_uploaded_video(conf, model):
+def infer_uploaded_video(conf, detect_model, classify_model):
     """
     Execute inference for uploaded video
     :param conf: Confidence of YOLOv8 model
@@ -98,8 +97,9 @@ def infer_uploaded_video(conf, model):
         col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("Detect motorbike"):
-                if remove_folder_contents('runs/detect'):
+                if remove_folder_contents('runs/detect') and remove_folder_contents('runs/classify'):
                     video_playing = True
+                    bbox_images_folder = './runs/detect/predict/crops/motorcycle'
                     with st.spinner("Running..."):
                         try:
                             tfile = tempfile.NamedTemporaryFile(delete=False)
@@ -109,24 +109,13 @@ def infer_uploaded_video(conf, model):
                             while video_playing and vid_cap.isOpened():
                                 success, image = vid_cap.read()
                                 if success:
-                                    _display_detected_frames(conf, model, video_placeholder, image)
+                                    _display_detected_frames(conf, detect_model, video_placeholder, image)
                                 else:
                                     vid_cap.release()
                                     break
                         except Exception as e:
                             st.error(f"Error loading video: {e}")
-        with col2:
-            if st.button("Stop Video"):
-                stop_video()
-        with col3:
-            if st.button("Analyze"):
-                if remove_folder_contents('runs/classify'):
-                    st.session_state['analyze_pressed'] = True
-                    st_frame = st.empty()
-                    model = load_Yolo_model('weights/classify/best.pt')
-                    # model_path = './weights/classify/best.pt'
-                    bbox_images_folder = './runs/detect/predict/crops/motorcycle'
-                    with st.spinner("Running...."):
+                        
                         try:
                             # Load your model here (assuming 'load_model' is a function to do so)
                             # List all image files in the directory
@@ -135,13 +124,17 @@ def infer_uploaded_video(conf, model):
                                     path = os.path.join(bbox_images_folder, file)
                                     # Predict and display each image
                                     if path and os.path.isfile(path):
-                                        model.predict(path, save_txt=True)
+                                        classify_model.predict(path, save_txt=True)
                                         # Assuming 'results' has a property that contains the image data
                                         # st_frame.image(results.img_data, use_column_width=True)
                                         time.sleep(0.1)
                             csv_generate()
                         except Exception as e:
                             st.error(f"An error occurred: {e}")
+        with col2:
+            if st.button("Stop Video"):
+                stop_video()
+                        
                                         
 
 def infer_uploaded_webcam(conf, model, webcam_url):
