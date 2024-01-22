@@ -6,7 +6,7 @@ labels_file = 'runs/detect/predict/labels/image0.txt'  # Replace with the correc
 
 # Prepare the CSV file to write the merged data
 def csv_generate():
-    with open('annotations.csv', 'w', newline='') as csvfile:
+    with open('./annotation/annotations.csv', 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         csvwriter.writerow(['filename', 'class', 'x_center', 'y_center', 'width', 'height'])
 
