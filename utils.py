@@ -1,12 +1,15 @@
 from ultralytics import YOLO
 import streamlit as st
 import cv2
+import fnmatch
+import os as path
+import os
 from PIL import Image
 import tempfile
-import os
-import shutil
+import time
 from  func.delete_file import remove_folder_contents
-from func.mode_infer import _display_detected_frames
+from func.mode_infer import _display_detected_frames, _display_classify_frame
+from func.csv_generator import csv_generate
 # Global variable to control the video playback
 video_playing = True
 
@@ -28,8 +31,8 @@ def load_Yolo_model(model_path):
     model = YOLO(model_path)
     return model
 
-def load_model(model_path):
-    return 1
+# def load_model(model_path):
+#     return 1
 
 def infer_uploaded_image(conf, model):
     """
@@ -117,8 +120,29 @@ def infer_uploaded_video(conf, model):
                 stop_video()
         with col3:
             if st.button("Analyze"):
-                st.session_state['analyze_pressed'] = True
-
+                if remove_folder_contents('runs/classify'):
+                    st.session_state['analyze_pressed'] = True
+                    st_frame = st.empty()
+                    model = load_Yolo_model('weights/classify/best.pt')
+                    # model_path = './weights/classify/best.pt'
+                    bbox_images_folder = './runs/detect/predict/crops/motorcycle'
+                    with st.spinner("Running...."):
+                        try:
+                            # Load your model here (assuming 'load_model' is a function to do so)
+                            # List all image files in the directory
+                            for file in os.listdir(bbox_images_folder): 
+                                if fnmatch.fnmatch(file, '*.jpg'):  # Check if the file is a .jpg
+                                    path = os.path.join(bbox_images_folder, file)
+                                    # Predict and display each image
+                                    if path and os.path.isfile(path):
+                                        model.predict(path, save_txt=True)
+                                        # Assuming 'results' has a property that contains the image data
+                                        # st_frame.image(results.img_data, use_column_width=True)
+                                        time.sleep(0.1)
+                            csv_generate()
+                        except Exception as e:
+                            st.error(f"An error occurred: {e}")
+                                        
 
 def infer_uploaded_webcam(conf, model, webcam_url):
     """

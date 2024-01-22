@@ -97,7 +97,10 @@ if 'analyze_pressed' in st.session_state and st.session_state['analyze_pressed']
     if model_type:
         model_path = Path(config.CLASSIFY_MODEL_DIR, str(classify_model))
     else:
-        "select model"
-    print(model_path)
+        "error load model"
+    try:
+        model = load_Yolo_model(model_path)
+    except Exception as e:
+        st.error(f"Unable to load model. Please check the specified path: {model_path}")
     # Reset the session state so the select box won't keep appearing
     st.session_state['analyze_pressed'] = False
