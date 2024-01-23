@@ -17,7 +17,7 @@ def _display_detected_frames(conf, model, st_frame, image):
     image = cv2.resize(image,  (720, int(720 * (9 / 16))))
 
     # Predict the objects in the image using YOLOv8 model
-    res = model.predict(image, conf=conf, classes=3, save_crop = True, save_txt = True)
+    res = model.predict(image, conf=conf, classes=3, save_crop = True, save_txt = True, save = True)
 
     # Plot the detected objects on the video frame
     res_plotted = res[0].plot()
@@ -45,3 +45,21 @@ def _display_classify_frame(model, st_frame, folder):
             if file is not None:
                 results = model.predict(path, save_txt = True)
                 time.sleep(0.5)
+
+def detect_on_stream(conf, model, folder):
+    for file in os.listdir(folder): 
+        if fnmatch.fnmatch(file, '*.jpg'):  # Kiểm tra nếu file là một file .jpg
+                        # Loop through each file and display the classified frame
+            path = os.path.join(folder, file)
+            model.predict(path, conf = 0.4, save_crop = True, save_txt = True, classes = 3)
+
+def _yolo_classify():
+    model_path = './weights/classify/best.pt'
+    test_folder= 'runs/detect/predict/crops/motorcycle'
+    model = YOLO(model_path)
+
+    for file in os.listdir(test_folder): 
+        if fnmatch.fnmatch(file, '*.jpg'):  # Kiểm tra nếu file là một file .jpg
+                            # Loop through each file and display the classified frame
+            path = os.path.join(test_folder, file)
+            model.predict(path, conf = 0.6, save_txt = True)

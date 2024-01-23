@@ -15,7 +15,7 @@ st.set_page_config(
     )
 
 # main page heading
-st.title("Interface for Bộ Công An")
+st.title("Interface for TH Truemilk ")
 
 # sidebar
 st.sidebar.header("DL Model Config")

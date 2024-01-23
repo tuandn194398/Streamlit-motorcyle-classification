@@ -6,9 +6,11 @@ import os
 from PIL import Image
 import tempfile
 import time
+import threading
 from  func.delete_file import remove_folder_contents
 from func.mode_infer import _display_detected_frames, _display_classify_frame
 from func.csv_generator import csv_generate
+from func.frame_cutter import extract_and_save_frames
 # Global variable to control the video playback
 video_playing = True
 
@@ -110,6 +112,7 @@ def infer_uploaded_video(conf, detect_model, classify_model):
                                 success, image = vid_cap.read()
                                 if success:
                                     _display_detected_frames(conf, detect_model, video_placeholder, image)
+     
                                 else:
                                     vid_cap.release()
                                     break
@@ -145,12 +148,15 @@ def infer_uploaded_webcam(conf, model, webcam_url):
     :return: None
     """
     global video_playing
+    frame_fol = "src/frame"
     try:
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Start Webcam"):
                 video_playing = True
                 remove_folder_contents('runs/detect')
+                remove_folder_contents('runs/classify')
+                remove_folder_contents('src/frame')
         with col2:
             if st.button("Stop Webcam"):
                 stop_video()
@@ -159,6 +165,7 @@ def infer_uploaded_webcam(conf, model, webcam_url):
         while video_playing:
             success, image = vid_cap.read()
             if success:
+                extract_and_save_frames(webcam_url, frame_fol)
                 _display_detected_frames(conf, model, st_frame, image)
             else:
                 vid_cap.release()
